@@ -4,15 +4,13 @@
     <div class="home_left">
       <ul>
         <!-- 动态环形图 -->
-        <li>
-          <store-tag
-            v-for="i in 3"
-            :key="i"
-            :id="i"
-            :storeTotal="100 * i"
-            :useGoods="50 + i"
-          />
-        </li>
+        <store-tag
+          v-for="i in 3"
+          :key="i"
+          :id="i"
+          :storeTotal="100 * i"
+          :useGoods="50 + i"
+        />
       </ul>
     </div>
     <div class="home_right">
@@ -24,19 +22,19 @@
             </span>
             <p class="warn_tt">故障信息</p>
             <img src="~@/assets/image/box1_bg.png" alt="" />
-          </div>
-          <div class="context">
-            <!--信息滚动-->
-            <TextTag></TextTag>
+            <div class="context">
+              <!--信息滚动-->
+              <TextTag></TextTag>
+            </div>
           </div>
         </li>
         <li>
           <div class="home_right_status">
             <!-- 标题 -->
-            <div class="home_right_status_p">
-              <i><img src="~@/assets/image/run.png" alt="" /></i>
-              运行状态
-            </div>
+            <span>
+              <img src="~@/assets/image/run.png" alt="" />
+            </span>
+            <p class="status_tt">运行状态</p>
             <!-- 背景 -->
             <div class="home_right_status_img">
               <img src="~@/assets/image/box3_bg.png" alt="" />
@@ -57,13 +55,18 @@
       </ul>
     </div>
     <div class="home_bottom">
-      <div class="home_bottom_button">
-        <ul>
-          <li class="button button_1"><span>仓库A</span></li>
-          <li class="button button_2"><span>仓库A</span></li>
-          <li class="button button_3"><span>仓库A</span></li>
-        </ul>
-      </div>
+      <ul>
+        <li
+          class="button button_1"
+          :style="{ '--transform': 'rotate(' + Math.random() * 360 + 'deg)' }"
+          v-for="store in storeList"
+          :key="store.id"
+        >
+          <router-link :to="'/store?id=' + store.id">
+            {{ store.name }}
+          </router-link>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -72,10 +75,18 @@
 import StoreTag from "@/views/home/components/storeTag";
 import TextTag from "@/views/home/components/textScrolling";
 import histogram from "@/views/home/components/histogram";
+import { computed } from "vue";
+import { useStore } from "vuex";
 export default {
   components: { StoreTag, TextTag, histogram },
   setup() {
-    return {};
+    const store = useStore();
+    // 获取仓库列表
+    store.dispatch("store/getStoreList");
+
+    const storeList = computed(() => store.state.store.storeList);
+
+    return { storeList };
   },
 };
 </script>
@@ -91,6 +102,7 @@ export default {
 }
 
 .header {
+  position: absolute;
   width: 100%;
   height: 60px;
   line-height: 68px;
@@ -100,22 +112,41 @@ export default {
 }
 
 .home_left {
-  position: absolute;
-  top: 11%;
-  left: 5%;
-  li {
-    padding: 6% 0;
+  float: left;
+  margin-top: 8%;
+  margin-left: 5%;
+  width: 20%;
+  height: 80%;
+  ul {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    flex-direction: column;
+    justify-content: space-between; /* 子元素在横轴上两端对齐 */
   }
 }
 .home_right {
-  position: absolute;
-  top: 13%;
-  right: 5%;
-  li {
-    padding: 4% 0 40% 0;
+  float: right;
+  margin-top: 8%;
+  margin-right: 5%;
+  width: 20%;
+  height: 80%;
+  ul {
+    height: 100%;
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    flex-direction: column;
+    justify-content: space-between; /* 子元素在横轴上两端对齐 */
+
+    li {
+      width: 100%;
+    }
   }
+
   .home_right_warn {
     position: relative;
+    width: 100%;
     > span {
       position: absolute;
       top: 10%;
@@ -139,11 +170,14 @@ export default {
 // 图片的处理
 .home img {
   border-radius: 7%;
+  width: 100%;
 }
 .context {
   position: absolute;
-  top: 9%;
-  left: 7%;
+  top: 60px;
+  left: 8%;
+  width: 84%;
+  height: 60%;
   li {
     padding: 5px 0;
     color: #fff;
@@ -155,42 +189,37 @@ export default {
 // 运行状态
 .home_right_status {
   position: relative;
-}
-.home_right_status_p {
-  position: absolute;
-  top: 10px;
-  left: 38%;
-  color: #00ffff;
-  z-index: 9999;
-  i {
-    display: inline-block;
-    width: 21px;
-    height: 25px;
-    margin: 0 0 0 -10px;
+  width: 100%;
+  > span {
+    position: absolute;
+    top: 3%;
+    left: 35%;
+    width: 20px;
+    height: 18px;
     img {
       width: 100%;
-      margin: 3px 0 0 0;
+      height: 100%;
     }
+  }
+  .status_tt {
+    position: absolute;
+    top: 3%;
+    left: 44%;
+    color: #00ffff;
   }
 }
-.home_right_status_img {
-  position: relative;
-  .home_right_status_img_context {
-    position: absolute;
-    top: 15%;
-    left: 5%;
-    color: #fff;
-    height: 110px;
-    //background-color: red;
-    li {
-      padding: 0;
-    }
-  }
+
+.home_right_status_img_context {
+  position: absolute;
+  top: 16%;
+  left: 30px;
+  width: 100%;
 }
 
 .home_right_status_img_context_title {
   //margin:0 0 0 -70%
   text-align: left;
+  color: #fff;
   ::before {
     content: " ";
     display: inline-block;
@@ -230,29 +259,13 @@ export default {
       position: absolute;
       top: 0;
       left: 0;
+      transform: var(--transform);
     }
-    span {
+    a {
       display: inline-block;
       padding: 45% 0;
       margin-left: -10px;
-    }
-  }
-
-  .button_1 {
-    ::before {
-      transform: rotate(0deg);
-    }
-  }
-
-  .button_2 {
-    ::before {
-      transform: rotate(80deg);
-    }
-  }
-
-  .button_3 {
-    ::before {
-      transform: rotate(130deg);
+      color: #fff;
     }
   }
 }

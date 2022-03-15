@@ -53,6 +53,7 @@
 import { ref } from "vue";
 import { searchDeliveryNameApi, removeGoodsByIdApi } from "@/api/goods";
 import { message } from "ant-design-vue";
+import { useStore } from "vuex";
 export default {
   name: "operationPanelDelivery",
   props: {
@@ -64,8 +65,13 @@ export default {
       type: Number,
       default: 0,
     },
+    storeId: {
+      type: Number,
+      default: null,
+    },
   },
-  setup() {
+  setup(props) {
+    const store = useStore();
     // 搜索关键字
     const searchValue = ref("");
     // 搜索出的商品列表(商品出库)
@@ -75,7 +81,10 @@ export default {
     // 点击搜索或按下回车键时的回调
     const onSearch = () => {
       // 根据商品名称搜索商品列表
-      searchDeliveryNameApi(searchValue.value).then((data) => {
+      searchDeliveryNameApi({
+        store_id: props.storeId,
+        name: searchValue.value,
+      }).then((data) => {
         if (data.status === 200) {
           // 存储商品列表(商品出库)
           deliveryList.value = data.data;
@@ -96,16 +105,21 @@ export default {
     const removeGoods = () => {
       // 根据商品id移除商品
       removeGoodsByIdApi({
+        store_id: props.storeId,
         ids: selectedDeliveryIdList.value,
         takeout_time: new Date().toLocaleString() / 1000,
       }).then((data) => {
         if (data.status === 200) {
           // 提示信息
           message.success(data.message);
-          // 删除移除的商品
+          // 删除搜索结果中移除的商品
           deliveryList.value = deliveryList.value.filter(
-            (item) => !data.data.find((item2) => item2.goods_id === item.id)
+            (item) => !data.data.find((goods) => goods.goods_id === item.id)
           );
+          // 删除货物列表中移除的商品
+          data.data.forEach((goods) => {
+            store.commit("goods/removeGoods", goods.goods_id);
+          });
         }
       });
     };
