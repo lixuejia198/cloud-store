@@ -1,5 +1,5 @@
 <template>
-  <div class="operationPanel-right-delivery" style="display: none">
+  <div class="operationPanel-delivery" style="display: none">
     <!--  搜索框  -->
     <a-input-search
       v-model:value="searchValue"
@@ -8,13 +8,10 @@
       @search="onSearch"
     />
     <!--  搜索出的商品列表  -->
-    <div
-      class="operationPanel-right-delivery-list"
-      v-if="deliveryList?.length > 0"
-    >
+    <div class="operationPanel-delivery-list" v-if="deliveryList?.length > 0">
       <a-card
         :class="[
-          'operationPanel-right-delivery-item',
+          'operationPanel-delivery-item',
           selectedDeliveryIdList.indexOf(item.id) !== -1 ? 'active' : '',
         ]"
         size="small"
@@ -44,27 +41,19 @@
       v-if="deliveryList?.length > 0"
       @click="removeGoods"
     >
-      移除商品
+      商品出库
     </a-button>
   </div>
 </template>
 
 <script>
 import { ref } from "vue";
-import { searchDeliveryNameApi, removeGoodsByIdApi } from "@/api/goods";
+import { searchDeliveryNameApi } from "@/api/goods";
 import { message } from "ant-design-vue";
 import { useStore } from "vuex";
 export default {
   name: "operationPanelDelivery",
   props: {
-    width: {
-      type: Number,
-      default: 340,
-    },
-    height: {
-      type: Number,
-      default: 0,
-    },
     storeId: {
       type: Number,
       default: null,
@@ -103,25 +92,21 @@ export default {
     };
     // 点击移除商品按钮 移除商品
     const removeGoods = () => {
-      // 根据商品id移除商品
-      removeGoodsByIdApi({
-        store_id: props.storeId,
-        ids: selectedDeliveryIdList.value,
-        takeout_time: new Date().toLocaleString() / 1000,
-      }).then((data) => {
-        if (data.status === 200) {
-          // 提示信息
-          message.success(data.message);
-          // 删除搜索结果中移除的商品
-          deliveryList.value = deliveryList.value.filter(
-            (item) => !data.data.find((goods) => goods.goods_id === item.id)
-          );
-          // 删除货物列表中移除的商品
-          data.data.forEach((goods) => {
-            store.commit("goods/removeGoods", goods.goods_id);
-          });
-        }
-      });
+      store
+        .dispatch("goods/removeGoods", {
+          storeId: props.storeId,
+          ids: selectedDeliveryIdList.value,
+        })
+        .then((res) => {
+          if (res.status === 200) {
+            // 删除搜索结果中移除的商品
+            deliveryList.value = deliveryList.value.filter(
+              (item) => !res.data.find((goods) => goods.goods_id === item.id)
+            );
+          }
+        });
+      // 清空选中的商品
+      selectedDeliveryIdList.value = [];
     };
 
     // 选中商品
@@ -149,9 +134,9 @@ export default {
 </script>
 
 <style scoped lang="less">
-.operationPanel-right-delivery {
+.operationPanel-delivery {
   height: 100%;
-  .operationPanel-right-delivery-list {
+  .operationPanel-delivery-list {
     text-align: left;
     height: calc(100% - 32px - 32px - 30px);
     overflow-y: auto;
@@ -159,7 +144,7 @@ export default {
     p {
       margin-bottom: 8px;
     }
-    .operationPanel-right-delivery-item {
+    .operationPanel-delivery-item {
       opacity: 0.7;
       &:hover,
       &.active {
